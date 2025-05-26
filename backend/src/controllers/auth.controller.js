@@ -167,3 +167,85 @@ export const logout =async (req, res) => {
 
  
 };
+
+export const onBoarding=async(req,res)=>{
+
+  try{
+    const loggedInUser=req.user;
+
+    const {bio,nativeLanguage,learningLanguage,fullName}=req.body;
+
+    if(!bio || !nativeLanguage || !learningLanguage || !fullName){
+
+    return res.status(400).json({
+      message:"all fileds are required..",
+    });
+  }
+
+  
+  const updatedUser=  await User.findByIdAndUpdate(loggedInUser._id,{
+    ...req.body,
+    isOnboarded:true,
+    
+
+  },{new:true});
+
+  if(!updatedUser){
+    throw new Error("user is not updated:error");
+  }
+
+  // TODO update userInfo to Stream
+
+  try{
+
+    await upsertStreamUser({
+      id: updatedUser._id.toString(),
+      name: updatedUser.fullName,
+      image:updatedUser.profilePic || ""
+  
+  
+  
+    });
+
+    console.log("stream user updated after onBoarding");
+  }catch(streamError){
+    console.log(streamError.message);
+
+  }
+
+
+ 
+
+
+
+
+
+
+
+
+
+  res.status(200).json({success:true,
+    user:updatedUser
+  });
+
+
+
+
+
+  
+    
+
+  }catch(error){
+
+    res.status(500).send(error.message);
+
+  }
+
+ 
+
+
+
+
+
+  
+}
